@@ -6,7 +6,7 @@ const app = express();
 const server = http.createServer(app);
 
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // 房间存储
 const rooms = new Map();
