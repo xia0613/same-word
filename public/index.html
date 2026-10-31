@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=ZCOOL+QingKe+HuangYou&display=swap" rel="stylesheet">
   <title>哪怕离你很远两颗心也可以贴近 | SAME WORD</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
     body {
-  font-family: 'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: 'ZCOOL QingKe HuangYou', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   background: linear-gradient(135deg, #52c234 0%, #061700 100%);
   background-size: cover;
   background-position: center;
@@ -50,103 +50,6 @@ body::before {
   position: relative; 
 }
 
-/* 所有设备：文字白色 */
-.logo p, .round-info, label {
-  color: rgba(255, 255, 255, 0.9) !important;
-}
-
-.logo h1 {
-  background: none;
-  -webkit-text-fill-color: white;
-  color: white;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-}
-
-input {
-  background: rgba(255, 255, 255, 0.15);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  color: white;
-}
-
-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-input:focus {
-  border-color: rgba(255, 255, 255, 0.6);
-}
-
-.btn-primary {
-  background: rgba(255, 255, 255, 0.25);
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  color: white;
-}
-
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.15);
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.word-box {
-  background: rgba(255, 255, 255, 0.12);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  color: white;
-}
-
-.word-box.mine {
-  background: rgba(102, 126, 234, 0.35);
-  color: white;
-}
-
-.word-box.theirs {
-  background: rgba(233, 30, 99, 0.35);
-  color: white;
-}
-
-.word-box.pending {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.history-item {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: white;
-}
-
-.history-item .round {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.room-code {
-  background: rgba(255, 255, 255, 0.12);
-  border: 2px dashed rgba(255, 255, 255, 0.4);
-  color: white;
-}
-
-.status-message.success {
-  background: rgba(46, 125, 50, 0.5);
-  color: white;
-}
-
-.status-message.waiting {
-  background: rgba(245, 127, 23, 0.5);
-  color: white;
-}
-
-.timer {
-  color: white;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-}
-
-.timer.warning {
-  color: #ff6b6b;
-}
-
-.status-message {
-  color: white;
-}
 
     .container {
   background: white;
@@ -158,13 +61,146 @@ input:focus {
 }
 
 /* 电脑端：透明悬浮毛玻璃 */
+/* 电脑端：毛玻璃 + 像素字体 */
 @media (min-width: 768px) {
+  body {
+    background: url('/bg.jpg') no-repeat center center fixed;
+    background-size: cover;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: -1;
+  }
+
   .container {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    z-index: 1;
+    position: relative;
+  }
+
+  /* 电脑端标题用像素字体 */
+  .logo h1 {
+    font-family: 'Press Start 2P', 'ZCOOL QingKe HuangYou', monospace;
+    font-size: 28px;
+    background: none;
+    -webkit-text-fill-color: white;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    letter-spacing: 2px;
+  }
+
+  /* 副标题放大 */
+  .logo p {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.95) !important;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.3);
+  }
+
+  /* 电脑端计时器用像素字体 */
+  .timer {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 42px;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+
+  .timer.warning {
+    color: #ff6b6b;
+  }
+
+  /* 电脑端房间码用像素字体 */
+  .room-code {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 24px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 2px dashed rgba(255, 255, 255, 0.4);
+    color: white;
+  }
+
+  /* 电脑端文字全白 */
+  .round-info, label, .status-message {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  input {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-family: 'ZCOOL QingKe HuangYou', 'PingFang SC', sans-serif;
+  }
+
+  input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  input:focus {
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+
+  .btn-primary {
+    background: rgba(255, 255, 255, 0.25);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    font-family: 'ZCOOL QingKe HuangYou', 'PingFang SC', sans-serif;
+  }
+
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.9);
+    font-family: 'ZCOOL QingKe HuangYou', 'PingFang SC', sans-serif;
+  }
+
+  .word-box {
+    background: rgba(255, 255, 255, 0.12);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+
+  .word-box.mine {
+    background: rgba(102, 126, 234, 0.35);
+    color: white;
+  }
+
+  .word-box.theirs {
+    background: rgba(233, 30, 99, 0.35);
+    color: white;
+  }
+
+  .word-box.pending {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .history-item {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: white;
+  }
+
+  .history-item .round {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .status-message.success {
+    background: rgba(46, 125, 50, 0.5);
+    color: white;
+  }
+
+  .status-message.waiting {
+    background: rgba(245, 127, 23, 0.5);
+    color: white;
   }
 }
     .logo {
@@ -374,52 +410,142 @@ input:focus {
     .flex { display: flex; gap: 8px; }
     .flex > * { flex: 1; }
 
-    @media (max-width: 480px) {
-  .container { 
-    padding: 24px; 
-    max-width: 100%;
+    /* 手机端：白卡片 + 深色字 */
+@media (max-width: 480px) {
+  body {
+    background: url('/bg.jpg') no-repeat center center;
+    background-size: cover;
   }
-  .logo h1 { 
-    font-size: 28px; 
-  }
-  .logo p {
-    font-size: 16px;
-  }
-  input {
-    font-size: 18px;
-    padding: 16px;
-  }
-  button {
-    font-size: 18px;
-    padding: 16px;
-  }
-  .timer {
-    font-size: 42px;
-  }
-  .word-box {
-    font-size: 22px;
+
+  .container {
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 24px;
     padding: 24px;
+    max-width: 100%;
+    z-index: 1;
+    position: relative;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
+
+  /* 手机端标题 */
+  .logo h1 {
+    font-family: 'Press Start 2P', 'ZCOOL QingKe HuangYou', monospace;
+    font-size: 22px;
+    color: #2e7d32;
+    background: none;
+    -webkit-text-fill-color: #2e7d32;
+    text-shadow: none;
+    letter-spacing: 1px;
+  }
+
+  .logo p {
+    font-size: 15px;
+    color: #555 !important;
+  }
+
+  .timer {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 36px;
+    color: #2e7d32;
+  }
+
+  .timer.warning {
+    color: #e74c3c;
+  }
+
   .room-code {
-    font-size: 28px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 20px;
+    color: #2e7d32;
+    background: #f0f7f0;
+    border: 2px dashed #2e7d32;
   }
-  .round-info {
+
+  .round-info, label {
+    color: #555 !important;
+  }
+
+  input {
+    background: #f8f9fa;
+    border: 2px solid #e0e0e0;
+    color: #333;
+    font-size: 17px;
+    padding: 14px;
+  }
+
+  input::placeholder {
+    color: #999;
+  }
+
+  input:focus {
+    border-color: #2e7d32;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #360033, #0b8793);
+    color: white;
+    font-size: 17px;
+    padding: 14px;
+  }
+
+  .btn-secondary {
+    background: #f0f0f0;
+    color: #333;
     font-size: 16px;
   }
-  .status-message {
-    font-size: 15px;
+
+  .word-box {
+    font-size: 20px;
+    padding: 20px;
   }
+
+  .word-box.mine {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  .word-box.theirs {
+    background: #fce4ec;
+    color: #c62828;
+  }
+
+  .word-box.pending {
+    background: #f5f5f5;
+    color: #999;
+  }
+
   .history-item {
-    font-size: 15px;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    color: #333;
+    font-size: 14px;
+  }
+
+  .history-item .round {
+    color: #2e7d32;
+  }
+
+  .status-message.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  .status-message.waiting {
+    background: #fff8e1;
+    color: #f57f17;
+  }
+
+  .status-message {
+    color: #555;
+    font-size: 14px;
   }
 }
-
 /* 漂浮泡泡 - 纯背景装饰 */
 .bubble {
   position: fixed;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), rgba(255,255,255,0.02));
-  border: 1px solid rgba(255,255,255,0.08);
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), rgba(255,255,255,0.05));
+  border: 1px solid rgba(255,255,255,0.2);
   pointer-events: none;
   z-index: 0;
   animation: float-up linear infinite;
@@ -432,11 +558,11 @@ input:focus {
     opacity: 0;
   }
   5% {
-    opacity: 0.6;
+  opacity: 0.8;
   }
   95% {
-    opacity: 0.3;
-  }
+  opacity: 0.5;
+}
   100% {
     transform: translateY(-5vh) rotate(360deg);
     opacity: 0;
