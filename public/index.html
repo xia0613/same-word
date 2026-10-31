@@ -313,214 +313,216 @@
       <button class="btn-secondary" onclick="shareResult()">SHARE 分享结果</button>
     </div>
   </div>
+<script>
+  let roomCode;
+  let playerId;
+  let currentRound = 1;
+  let thinkTime = 60;
+  let timerInterval;
+  let pollInterval;
+  let mySubmitted = false;
 
-  <script>
-    let ws;
-    let roomCode;
-    let playerId;
-    let currentRound = 1;
-    let thinkTime = 60;
-    let timerInterval;
-    let mySubmitted = false;
+  function setTime(t) {
+    thinkTime = t;
+    document.querySelectorAll('.flex button').forEach((btn, i) => {
+      btn.style.background = [30, 60, 90][i] === t ? '#667eea' : '#f0f0f0';
+      btn.style.color = [30, 60, 90][i] === t ? 'white' : '#333';
+    });
+  }
 
-    function setTime(t) {
-      thinkTime = t;
-      document.querySelectorAll('.flex button').forEach((btn, i) => {
-        btn.style.background = [30, 60, 90][i] === t ? '#667eea' : '#f0f0f0';
-        btn.style.color = [30, 60, 90][i] === t ? 'white' : '#333';
+  async function createRoom() {
+    const nickname = document.getElementById('nickname').value.trim() || '玩家1';
+    
+    try {
+      const res = await fetch('/api/create-room', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname, thinkTime })
       });
-    }
-
-    function connect() {
-      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-      ws = new WebSocket(`${protocol}//${location.host}`);
+      const msg = await res.json();
       
-      ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        handleMessage(msg);
-      };
-
-      ws.onclose = () => {
-        alert('连接断开，请刷新页面');
-      };
+      if (msg.type === 'room_created') {
+        roomCode = msg.roomCode;
+        playerId = msg.playerId;
+        showSection('waiting');
+        document.getElementById('display-code').textContent = roomCode;
+        document.getElementById('share-link').textContent = location.origin + '?room=' + roomCode;
+        startPolling();
+      }
+    } catch (e) {
+      alert('创建失败，请重试');
     }
+  }
 
-    function handleMessage(msg) {
-      switch (msg.type) {
-        case 'room_created':
-          roomCode = msg.roomCode;
-          playerId = msg.playerId;
-          showSection('waiting');
-          document.getElementById('display-code').textContent = roomCode;
-          document.getElementById('share-link').textContent = location.origin + '?room=' + roomCode;
-          break;
+  async function joinRoom() {
+    const code = document.getElementById('join-code').value.trim().toUpperCase();
+    const nickname = document.getElementById('nickname').value.trim() || '玩家2';
+    
+    if (!code) return alert('PLEASE ENTER CODE 请输入房间码');
 
-        case 'joined_room':
-          roomCode = msg.roomCode;
-          playerId = msg.playerId;
-          showSection('game');
-          break;
+    try {
+      const res = await fetch('/api/join-room', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomCode: code, nickname })
+      });
+      const msg = await res.json();
 
-        case 'player_joined':
-          showSection('game');
-          break;
+      if (msg.type === 'error') {
+        alert(msg.message);
+        return;
+      }
 
-        case 'new_round':
-          currentRound = msg.round;
-          mySubmitted = false;
-          updateUI(msg);
-          startTimer(msg.thinkTime);
-          break;
+      roomCode = msg.roomCode;
+      playerId = msg.playerId;
+      showSection('game');
+      startPolling();
+    } catch (e) {
+      alert('加入失败，请重试');
+    }
+  }
 
-        case 'opponent_submitted':
-          if (!mySubmitted) {
+  async function submitWord() {
+    const word = document.getElementById('word-input').value.trim();
+    if (!word) return alert('PLEASE ENTER A WORD 请输入一个词');
+    if (mySubmitted) return;
+
+    try {
+      const res = await fetch('/api/submit-word', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomCode, playerId, word })
+      });
+      const msg = await res.json();
+
+      if (msg.type === 'round_result') {
+        displayResult(msg);
+      } else if (msg.type === 'submitted') {
+        mySubmitted = true;
+        document.getElementById('my-word').textContent = word;
+        document.getElementById('word-input').disabled = true;
+        document.getElementById('submit-btn').disabled = true;
+        document.getElementById('status-msg').textContent = 'WAITING... 等待对方提交...';
+      }
+    } catch (e) {
+      alert('提交失败，请重试');
+    }
+  }
+
+  function startPolling() {
+    pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/game-state?roomCode=${roomCode}&playerId=${playerId}`);
+        const msg = await res.json();
+
+        if (msg.type === 'error') return;
+
+        // 更新 UI
+        if (msg.status === 'playing') {
+          if (msg.currentRound !== currentRound) {
+            currentRound = msg.currentRound;
+            mySubmitted = false;
+            updateUIForNewRound(msg);
+          }
+
+          if (msg.roundResult) {
+            displayResult(msg.roundResult);
+          } else if (msg.opponentSubmitted && !mySubmitted) {
             document.getElementById('status-msg').textContent = 'THEY SUBMITTED! 对方已提交，等待你...';
           }
-          break;
-
-        case 'round_result':
-          displayResult(msg);
-          break;
-
-        case 'time_up':
-          alert('TIME UP! 时间到！进入下一轮');
-          break;
-
-        case 'error':
-          alert(msg.message);
-          break;
+        }
+      } catch (e) {
+        console.error('轮询失败', e);
       }
-    }
+    }, 1000); // 每秒轮询一次
+  }
 
-    function createRoom() {
-      const nickname = document.getElementById('nickname').value.trim() || '玩家1';
-      connect();
-      ws.onopen = () => {
-        ws.send(JSON.stringify({
-          type: 'create_room',
-          nickname,
-          thinkTime
-        }));
-      };
-    }
+  function updateUIForNewRound(msg) {
+    document.getElementById('round-display').textContent = `ROUND ${msg.currentRound} 第${msg.currentRound}轮`;
+    document.getElementById('my-word').textContent = '?';
+    document.getElementById('their-word').textContent = '?';
+    document.getElementById('word-input').value = '';
+    document.getElementById('word-input').disabled = false;
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('status-msg').textContent = 'THINK & SUBMIT! 想一个词，同时提交！';
+    document.getElementById('their-word-box').className = 'word-box theirs pending';
+    updateHistory(msg.history);
+    startTimer(msg.thinkTime);
+  }
 
-    function joinRoom() {
-      const code = document.getElementById('join-code').value.trim().toUpperCase();
-      const nickname = document.getElementById('nickname').value.trim() || '玩家2';
-      if (!code) return alert('PLEASE ENTER CODE 请输入房间码');
-      
-      connect();
-      ws.onopen = () => {
-        ws.send(JSON.stringify({
-          type: 'join_room',
-          roomCode: code,
-          nickname
-        }));
-      };
-    }
+  function displayResult(msg) {
+    const myWord = msg.words.find(w => w.playerId === playerId);
+    const theirWord = msg.words.find(w => w.playerId !== playerId);
 
-    function submitWord() {
-      const word = document.getElementById('word-input').value.trim();
-      if (!word) return alert('PLEASE ENTER A WORD 请输入一个词');
-      if (mySubmitted) return;
+    document.getElementById('my-word').textContent = myWord?.word || '?';
+    document.getElementById('their-word').textContent = theirWord?.word || '?';
+    document.getElementById('their-word-box').className = 'word-box theirs';
 
-      ws.send(JSON.stringify({
-        type: 'submit_word',
-        word
-      }));
-
-      mySubmitted = true;
-      document.getElementById('my-word').textContent = word;
-      document.getElementById('word-input').disabled = true;
-      document.getElementById('submit-btn').disabled = true;
-      document.getElementById('status-msg').textContent = 'WAITING... 等待对方提交...';
-    }
-
-    function updateUI(msg) {
-      document.getElementById('round-display').textContent = `ROUND ${msg.round} 第${msg.round}轮`;
-      document.getElementById('my-word').textContent = '?';
-      document.getElementById('their-word').textContent = '?';
-      document.getElementById('word-input').value = '';
-      document.getElementById('word-input').disabled = false;
-      document.getElementById('submit-btn').disabled = false;
-      document.getElementById('status-msg').textContent = 'THINK & SUBMIT! 想一个词，同时提交！';
-      document.getElementById('their-word-box').className = 'word-box theirs pending';
-      
-      updateHistory(msg.history);
-    }
-
-    function displayResult(msg) {
-      const myWord = msg.words.find(w => w.playerId === playerId);
-      const theirWord = msg.words.find(w => w.playerId !== playerId);
-
-      document.getElementById('my-word').textContent = myWord?.word || '?';
-      document.getElementById('their-word').textContent = theirWord?.word || '?';
-      document.getElementById('their-word-box').className = 'word-box theirs';
-
-      if (msg.match) {
-        clearInterval(timerInterval);
-        setTimeout(() => {
-          showSection('result');
-          document.getElementById('final-round').textContent = msg.totalRounds;
-          updateHistory(msg.history || [], true);
-        }, 1500);
-      } else {
-        document.getElementById('status-msg').textContent = 'NOT SAME! 不一样！继续联想...';
-        document.getElementById('status-msg').className = 'status-message waiting';
-      }
-    }
-
-    function updateHistory(history, isFinal = false) {
-      const container = isFinal ? document.getElementById('final-history') : document.getElementById('history-list');
-      container.innerHTML = history.map(h => `
-        <div class="history-item">
-          <span class="round">ROUND ${h.round} 第${h.round}轮</span><br>
-          ${h.words.map(w => `${w.nickname}: ${w.word}`).join(' | ')}
-        </div>
-      `).join('');
-    }
-
-    function startTimer(seconds) {
+    if (msg.match) {
       clearInterval(timerInterval);
-      let remaining = seconds;
-      const timerEl = document.getElementById('timer');
+      clearInterval(pollInterval);
+      setTimeout(() => {
+        showSection('result');
+        document.getElementById('final-round').textContent = msg.totalRounds;
+        updateHistory(msg.history || [], true);
+      }, 1500);
+    } else {
+      document.getElementById('status-msg').textContent = 'NOT SAME! 不一样！继续联想...';
+    }
+  }
+
+  function updateHistory(history, isFinal = false) {
+    const container = isFinal ? document.getElementById('final-history') : document.getElementById('history-list');
+    container.innerHTML = history.map(h => `
+      <div class="history-item">
+        <span class="round">ROUND ${h.round} 第${h.round}轮</span><br>
+        ${h.words.map(w => `${w.nickname}: ${w.word}`).join(' | ')}
+      </div>
+    `).join('');
+  }
+
+  function startTimer(seconds) {
+    clearInterval(timerInterval);
+    let remaining = seconds;
+    const timerEl = document.getElementById('timer');
+    timerEl.textContent = remaining;
+    timerEl.className = 'timer';
+
+    timerInterval = setInterval(() => {
+      remaining--;
       timerEl.textContent = remaining;
-      timerEl.className = 'timer';
+      if (remaining <= 10) timerEl.className = 'timer warning';
+      if (remaining <= 0) clearInterval(timerInterval);
+    }, 1000);
+  }
 
-      timerInterval = setInterval(() => {
-        remaining--;
-        timerEl.textContent = remaining;
-        if (remaining <= 10) timerEl.className = 'timer warning';
-        if (remaining <= 0) clearInterval(timerInterval);
-      }, 1000);
-    }
+  function showSection(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('section-' + name).classList.add('active');
+  }
 
-    function showSection(name) {
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.getElementById('section-' + name).classList.add('active');
-    }
+  function copyLink() {
+    const link = document.getElementById('share-link').textContent;
+    navigator.clipboard.writeText(link).then(() => alert('COPIED! 链接已复制！'));
+  }
 
-    function copyLink() {
-      const link = document.getElementById('share-link').textContent;
-      navigator.clipboard.writeText(link).then(() => alert('COPIED! 链接已复制！'));
+  function shareResult() {
+    const text = `我和朋友在 SAME WORD 第${document.getElementById('final-round').textContent}轮同词成功！来挑战我们？`;
+    if (navigator.share) {
+      navigator.share({ title: 'SAME WORD', text, url: location.origin });
+    } else {
+      navigator.clipboard.writeText(text + ' ' + location.origin);
+      alert('COPIED! 已复制分享文案！');
     }
+  }
 
-    function shareResult() {
-      const text = `我和朋友在 SAME WORD 第${document.getElementById('final-round').textContent}轮同词成功！来挑战我们？`;
-      if (navigator.share) {
-        navigator.share({ title: 'SAME WORD', text, url: location.origin });
-      } else {
-        navigator.clipboard.writeText(text + ' ' + location.origin);
-        alert('COPIED! 已复制分享文案！');
-      }
-    }
-
-    // 自动填充房间码（从链接）
-    const urlParams = new URLSearchParams(location.search);
-    if (urlParams.get('room')) {
-      document.getElementById('join-code').value = urlParams.get('room');
-      document.getElementById('nickname').focus();
-    }
-  </script>
+  // 自动填充房间码
+  const urlParams = new URLSearchParams(location.search);
+  if (urlParams.get('room')) {
+    document.getElementById('join-code').value = urlParams.get('room');
+    document.getElementById('nickname').focus();
+  }
+</script>
+ 
 </body>
 </html>

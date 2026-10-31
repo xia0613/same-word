@@ -1,21 +1,18 @@
 const express = require('express');
 const http = require('http');
-const WebSocket = require('ws');
 const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
 
-// 静态文件
+app.use(express.json());
 app.use(express.static('public'));
 
-// 房间存储：roomCode -> roomData
+// 房间存储
 const rooms = new Map();
 
-// 生成6位房间码
 function generateRoomCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 去掉易混淆字符
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
   for (let i = 0; i < 6; i++) {
     code += chars[Math.floor(Math.random() * chars.length)];
@@ -23,100 +20,21 @@ function generateRoomCode() {
   return code;
 }
 
-// 创建房间
 function createRoom(thinkTime = 60) {
   const code = generateRoomCode();
   const room = {
     code,
-    players: [],        // 最多2人
+    players: [],
     currentRound: 1,
     thinkTime,
-    roundData: {},      // { roundNum: { player1: {word, submitted}, player2: {...} } }
-    status: 'waiting',  // waiting | playing | finished
-    timer: null
+    roundData: {},
+    status: 'waiting',
+    lastActivity: Date.now()
   };
   rooms.set(code, room);
   return room;
 }
 
-// 广播给房间内所有人
-function broadcast(room, message) {
-  room.players.forEach(p => {
-    if (p.ws.readyState === WebSocket.OPEN) {
-      p.ws.send(JSON.stringify(message));
-    }
-  });
-}
-
-// 检查本轮是否两人都提交了
-function checkRoundComplete(room) {
-  const round = room.roundData[room.currentRound];
-  if (!round) return;
-
-  const allSubmitted = room.players.every(p => round[p.id]?.submitted);
-  
-  if (allSubmitted) {
-    // 取消计时器
-    if (room.timer) {
-      clearTimeout(room.timer);
-      room.timer = null;
-    }
-
-    const words = room.players.map(p => round[p.id].word);
-    const isMatch = words[0] === words[1];
-
-    // 广播结果
-    broadcast(room, {
-      type: 'round_result',
-      round: room.currentRound,
-      words: room.players.map(p => ({
-        playerId: p.id,
-        nickname: p.nickname,
-        word: round[p.id].word
-      })),
-      match: isMatch,
-      totalRounds: room.currentRound
-    });
-
-    if (isMatch) {
-      room.status = 'finished';
-    } else {
-      room.currentRound++;
-      startNewRound(room);
-    }
-  }
-}
-
-// 开始新一轮
-function startNewRound(room) {
-  room.roundData[room.currentRound] = {};
-  
-  // 初始化本轮数据
-  room.players.forEach(p => {
-    room.roundData[room.currentRound][p.id] = { word: '', submitted: false };
-  });
-
-  // 广播新一轮开始
-  broadcast(room, {
-    type: 'new_round',
-    round: room.currentRound,
-    thinkTime: room.thinkTime,
-    history: getHistory(room)
-  });
-
-  // 设置超时（时间到自动判负/继续）
-  room.timer = setTimeout(() => {
-    broadcast(room, {
-      type: 'time_up',
-      round: room.currentRound,
-      message: '时间到！本轮作废，进入下一轮'
-    });
-    room.currentRound++;
-    startNewRound(room);
-  }, room.thinkTime * 1000);
-}
-
-// 获取历史记录
 function getHistory(room) {
   const history = [];
   for (let i = 1; i < room.currentRound; i++) {
@@ -134,127 +52,187 @@ function getHistory(room) {
   return history;
 }
 
-// WebSocket 连接处理
-wss.on('connection', (ws) => {
-  let currentRoom = null;
-  let playerId = null;
+function checkRoundComplete(room) {
+  const round = room.roundData[room.currentRound];
+  if (!round) return;
 
-  ws.on('message', (data) => {
-    try {
-      const msg = JSON.parse(data);
-      
-      switch (msg.type) {
-        case 'create_room':
-          const room = createRoom(msg.thinkTime || 60);
-          playerId = 'player_' + Date.now();
-          room.players.push({
-            id: playerId,
-            nickname: msg.nickname || '玩家1',
-            ws
-          });
-          currentRoom = room;
-          ws.send(JSON.stringify({
-            type: 'room_created',
-            roomCode: room.code,
-            playerId,
-            thinkTime: room.thinkTime
-          }));
-          break;
+  const allSubmitted = room.players.every(p => round[p.id]?.submitted);
+  
+  if (allSubmitted) {
+    const words = room.players.map(p => round[p.id].word);
+    const isMatch = words[0] === words[1];
 
-        case 'join_room':
-          const joinRoom = rooms.get(msg.roomCode);
-          if (!joinRoom) {
-            ws.send(JSON.stringify({ type: 'error', message: '我不认识这个码...请重新输入' }));
-            return;
-          }
-          if (joinRoom.players.length >= 2) {
-            ws.send(JSON.stringify({ type: 'error', message: '房间满人喽...' }));
-            return;
-          }
-          playerId = 'player_' + Date.now();
-          joinRoom.players.push({
-            id: playerId,
-            nickname: msg.nickname || '玩家2',
-            ws
-          });
-          currentRoom = joinRoom;
+    const result = {
+      type: 'round_result',
+      round: room.currentRound,
+      words: room.players.map(p => ({
+        playerId: p.id,
+        nickname: p.nickname,
+        word: round[p.id].word
+      })),
+      match: isMatch,
+      totalRounds: room.currentRound,
+      history: getHistory(room)
+    };
 
-          ws.send(JSON.stringify({
-            type: 'joined_room',
-            roomCode: joinRoom.code,
-            playerId,
-            thinkTime: joinRoom.thinkTime,
-            opponent: joinRoom.players[0].nickname
-          }));
-
-          // 通知房主有人加入
-          broadcast(joinRoom, {
-            type: 'player_joined',
-            nickname: msg.nickname,
-            message: `${msg.nickname} 加入房间啦！`
-          });
-
-          // 人齐了，开始游戏
-          if (joinRoom.players.length === 2) {
-            joinRoom.status = 'playing';
-            setTimeout(() => startNewRound(joinRoom), 1000);
-          }
-          break;
-
-        case 'submit_word':
-          if (!currentRoom || currentRoom.status !== 'playing') return;
-          
-          const round = currentRoom.roundData[currentRoom.currentRound];
-          if (round && round[playerId]) {
-            round[playerId].word = msg.word.trim();
-            round[playerId].submitted = true;
-
-            // 通知对方已提交（不显示词）
-            broadcast(currentRoom, {
-              type: 'opponent_submitted',
-              round: currentRoom.currentRound
-            });
-
-            checkRoundComplete(currentRoom);
-          }
-          break;
-
-        case 'get_history':
-          if (currentRoom) {
-            ws.send(JSON.stringify({
-              type: 'history',
-              history: getHistory(currentRoom),
-              currentRound: currentRoom.currentRound
-            }));
-          }
-          break;
-      }
-    } catch (e) {
-      console.error('消息解析错误:', e);
+    if (isMatch) {
+      room.status = 'finished';
+    } else {
+      room.currentRound++;
+      startNewRound(room);
     }
+
+    return result;
+  }
+  return null;
+}
+
+function startNewRound(room) {
+  room.roundData[room.currentRound] = {};
+  room.players.forEach(p => {
+    room.roundData[room.currentRound][p.id] = { word: '', submitted: false };
+  });
+  room.lastActivity = Date.now();
+}
+
+// API 路由
+
+// 创建房间
+app.post('/api/create-room', (req, res) => {
+  const { nickname, thinkTime } = req.body;
+  const room = createRoom(thinkTime || 60);
+  const playerId = 'player_' + Date.now();
+  
+  room.players.push({
+    id: playerId,
+    nickname: nickname || '玩家1'
   });
 
-  ws.on('close', () => {
-    if (currentRoom && playerId) {
-      currentRoom.players = currentRoom.players.filter(p => p.id !== playerId);
-      
-      if (currentRoom.players.length === 0) {
-        // 房间没人了，销毁
-        if (currentRoom.timer) clearTimeout(currentRoom.timer);
-        rooms.delete(currentRoom.code);
-      } else {
-        // 通知对方离开
-        broadcast(currentRoom, {
-          type: 'player_left',
-          message: '对方已离开'
-        });
-        currentRoom.status = 'waiting';
-      }
-    }
+  res.json({
+    type: 'room_created',
+    roomCode: room.code,
+    playerId,
+    thinkTime: room.thinkTime
   });
 });
 
-const PORT = process.env.PORT || 3000;
+// 加入房间
+app.post('/api/join-room', (req, res) => {
+  const { roomCode, nickname } = req.body;
+  const room = rooms.get(roomCode);
+
+  if (!room) {
+    return res.json({ type: 'error', message: '房间不存在' });
+  }
+  if (room.players.length >= 2) {
+    return res.json({ type: 'error', message: '房间已满' });
+  }
+
+  const playerId = 'player_' + Date.now();
+  room.players.push({
+    id: playerId,
+    nickname: nickname || '玩家2'
+  });
+
+  // 人齐了，开始游戏
+  if (room.players.length === 2) {
+    room.status = 'playing';
+    startNewRound(room);
+  }
+
+  res.json({
+    type: 'joined_room',
+    roomCode: room.code,
+    playerId,
+    thinkTime: room.thinkTime,
+    opponent: room.players[0].nickname,
+    status: room.status
+  });
+});
+
+// 提交词
+app.post('/api/submit-word', (req, res) => {
+  const { roomCode, playerId, word } = req.body;
+  const room = rooms.get(roomCode);
+
+  if (!room || room.status !== 'playing') {
+    return res.json({ type: 'error', message: '游戏未在进行' });
+  }
+
+  const round = room.roundData[room.currentRound];
+  if (round && round[playerId]) {
+    round[playerId].word = word.trim();
+    round[playerId].submitted = true;
+    room.lastActivity = Date.now();
+
+    const result = checkRoundComplete(room);
+    if (result) {
+      return res.json({ type: 'round_result', ...result });
+    }
+
+    return res.json({ type: 'submitted', round: room.currentRound });
+  }
+
+  res.json({ type: 'error', message: '提交失败' });
+});
+
+// 轮询获取状态
+app.get('/api/game-state', (req, res) => {
+  const { roomCode, playerId } = req.query;
+  const room = rooms.get(roomCode);
+
+  if (!room) {
+    return res.json({ type: 'error', message: '房间不存在' });
+  }
+
+  const round = room.roundData[room.currentRound];
+  const mySubmitted = round?.[playerId]?.submitted || false;
+  const opponentSubmitted = room.players.length === 2 && round?.[room.players.find(p => p.id !== playerId)?.id]?.submitted || false;
+
+  // 检查是否双方都提交了（用于轮询方获取结果）
+  let roundResult = null;
+  if (room.players.length === 2 && round) {
+    const allSubmitted = room.players.every(p => round[p.id]?.submitted);
+    if (allSubmitted) {
+      const words = room.players.map(p => round[p.id].word);
+      const isMatch = words[0] === words[1];
+      roundResult = {
+        round: room.currentRound,
+        words: room.players.map(p => ({
+          playerId: p.id,
+          nickname: p.nickname,
+          word: round[p.id].word
+        })),
+        match: isMatch,
+        totalRounds: room.currentRound
+      };
+    }
+  }
+
+  res.json({
+    type: 'game_state',
+    status: room.status,
+    currentRound: room.currentRound,
+    thinkTime: room.thinkTime,
+    mySubmitted,
+    opponentSubmitted,
+    players: room.players.map(p => ({ id: p.id, nickname: p.nickname })),
+    roundResult,
+    history: getHistory(room)
+  });
+});
+
+// 清理过期房间（30分钟无活动）
+setInterval(() => {
+  const now = Date.now();
+  for (const [code, room] of rooms.entries()) {
+    if (now - room.lastActivity > 30 * 60 * 1000) {
+      rooms.delete(code);
+    }
+  }
+}, 5 * 60 * 1000);
+
+const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`同词相遇服务器运行在端口 ${PORT}`);
 });
