@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=ZCOOL+QingKe+HuangYou&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
   <title>哪怕离你很远两颗心也可以贴近 | SAME WORD</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
     body {
-  font-family: 'ZCOOL QingKe HuangYou', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: 'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   background: linear-gradient(135deg, #52c234 0%, #061700 100%);
   background-size: cover;
   background-position: center;
@@ -22,22 +22,130 @@
 }
 
 /* 电脑端：用照片背景 */
-@media (min-width: 768px) {
-  body {
-    background: url('/bg.jpg') no-repeat center center fixed;
-    background-size: cover;
-  }
-  /* 加一层深色遮罩，让白色卡片更清楚 */
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: -1;
-  }
+/* 所有设备：背景图 + 毛玻璃 */
+body {
+  background: url('/bg.jpg') no-repeat center center fixed;
+  background-size: cover;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: -1;
+}
+
+
+.container {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 1;
+  position: relative; 
+}
+
+/* 所有设备：文字白色 */
+.logo p, .round-info, label {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.logo h1 {
+  background: none;
+  -webkit-text-fill-color: white;
+  color: white;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+input {
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+input:focus {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.btn-primary {
+  background: rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  color: white;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.word-box {
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.word-box.mine {
+  background: rgba(102, 126, 234, 0.35);
+  color: white;
+}
+
+.word-box.theirs {
+  background: rgba(233, 30, 99, 0.35);
+  color: white;
+}
+
+.word-box.pending {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.history-item {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.history-item .round {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.room-code {
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px dashed rgba(255, 255, 255, 0.4);
+  color: white;
+}
+
+.status-message.success {
+  background: rgba(46, 125, 50, 0.5);
+  color: white;
+}
+
+.status-message.waiting {
+  background: rgba(245, 127, 23, 0.5);
+  color: white;
+}
+
+.timer {
+  color: white;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.timer.warning {
+  color: #ff6b6b;
+}
+
+.status-message {
+  color: white;
 }
 
     .container {
@@ -191,10 +299,44 @@
     }
 
     .history {
-      margin-top: 24px;
-      max-height: 200px;
-      overflow-y: auto;
-    }
+  margin-top: 24px;
+  max-height: none;
+  overflow-y: visible;
+}
+
+.history-item {
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  font-size: 15px;
+}
+
+.history-item .round {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.history-words {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.history-word {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.history-word.mine {
+  background: rgba(102, 126, 234, 0.3);
+}
+
+.history-word.theirs {
+  background: rgba(233, 30, 99, 0.3);
+}
 
     .history-item {
       padding: 12px;
@@ -233,12 +375,95 @@
     .flex > * { flex: 1; }
 
     @media (max-width: 480px) {
-      .container { padding: 24px; }
-      .logo h1 { font-size: 24px; }
-    }
+  .container { 
+    padding: 24px; 
+    max-width: 100%;
+  }
+  .logo h1 { 
+    font-size: 28px; 
+  }
+  .logo p {
+    font-size: 16px;
+  }
+  input {
+    font-size: 18px;
+    padding: 16px;
+  }
+  button {
+    font-size: 18px;
+    padding: 16px;
+  }
+  .timer {
+    font-size: 42px;
+  }
+  .word-box {
+    font-size: 22px;
+    padding: 24px;
+  }
+  .room-code {
+    font-size: 28px;
+  }
+  .round-info {
+    font-size: 16px;
+  }
+  .status-message {
+    font-size: 15px;
+  }
+  .history-item {
+    font-size: 15px;
+  }
+}
+
+/* 漂浮泡泡 - 纯背景装饰 */
+.bubble {
+  position: fixed;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.08);
+  pointer-events: none;
+  z-index: 0;
+  animation: float-up linear infinite;
+  filter: blur(0.5px);
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(105vh) rotate(0deg);
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.6;
+  }
+  95% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-5vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
   </style>
 </head>
 <body>
+  <!-- 规则说明弹窗 -->
+<div id="rules-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center;">
+  <div style="background: rgba(30, 30, 40, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px; max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto; color: white; position: relative;">
+    <button onclick="document.getElementById('rules-modal').style.display='none'" style="position: absolute; top: 15px; right: 15px; background: none; border: none; color: white; font-size: 24px; cursor: pointer; width: auto; padding: 0;">✕</button>
+    <h2 style="font-family: 'Press Start 2P', monospace; font-size: 16px; margin-bottom: 20px; color: #d97757;">HOW TO PLAY</h2>
+    <div style="font-size: 15px; line-height: 1.8;">
+      <p style="margin-bottom: 12px;">🎯 <strong>目标：</strong>两个人想到同一个词</p >
+      <p style="margin-bottom: 12px;">📝 <strong>玩法：</strong></p >
+      <p style="margin-bottom: 8px; padding-left: 20px;">1. 每轮两人同时想一个词</p >
+      <p style="margin-bottom: 8px; padding-left: 20px;">2. 同时提交，一起揭晓</p >
+      <p style="margin-bottom: 8px; padding-left: 20px;">3. 一样 → 同词成功！🎉</p >
+      <p style="margin-bottom: 12px; padding-left: 20px;">4. 不一样 → 根据对方的词继续联想</p >
+      <p style="margin-bottom: 12px;">⏱️ <strong>时间：</strong>每轮有限时，注意倒计时</p >
+      <p>💡 <strong>技巧：</strong>第二轮开始，要同时联想你们之前写过的词</p >
+    </div>
+    <button onclick="document.getElementById('rules-modal').style.display='none'" style="margin-top: 20px; width: 100%; padding: 12px; background: #d97757; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; font-family: inherit;">GOT IT! 明白了</button>
+  </div>
+</div>
   <div class="container">
     <div class="logo">
       <h1>SAME WORD</h1>
@@ -264,6 +489,7 @@
       
       <input type="text" id="join-code" placeholder="ENTER CODE 输入房间码" maxlength="6" style="text-transform: uppercase;">
       <button class="btn-primary" onclick="joinRoom()">JOIN 加入房间</button>
+      <button class="btn-secondary" onclick="document.getElementById('rules-modal').style.display='flex'" style="margin-top: 12px;">📖 HOW TO PLAY 玩法说明</button>
     </div>
 
     <!-- 等待页面 -->
@@ -304,7 +530,7 @@
     <!-- 结果页面 -->
     <div id="section-result" class="section">
       <div class="status-message success" style="font-size: 18px; padding: 24px;">
-        🎉 MATCH! 恭喜！你们在第 <span id="final-round"></span> 轮同词成功！
+        🎉  恭喜！你们的脑电波同频啦！第 ${msg.totalRounds} 轮同词成功！🎉
       </div>
       
       <div class="history" id="final-history"></div>
@@ -451,7 +677,12 @@ function startPolling() {
     document.getElementById('word-input').value = '';
     document.getElementById('word-input').disabled = false;
     document.getElementById('submit-btn').disabled = false;
-    document.getElementById('status-msg').textContent = 'THINK & SUBMIT! 想一个词，同时提交！';
+    // 第一轮
+if (msg.currentRound === 1) {
+  document.getElementById('status-msg').textContent = '✨ 请输入你脑海里的第一个词！';
+} else {
+  document.getElementById('status-msg').textContent = `🔄 第${msg.currentRound}轮：请联想你们之前写过的词，输入新词汇！`;
+}
     document.getElementById('their-word-box').className = 'word-box theirs pending';
     updateHistory(msg.history);
     startTimer(msg.thinkTime);
@@ -474,19 +705,26 @@ function startPolling() {
         updateHistory(msg.history || [], true);
       }, 1500);
     } else {
-      document.getElementById('status-msg').textContent = 'NOT SAME! 不一样！继续联想...';
+      document.getElementById('status-msg').textContent = `❌ 不一样！看看你们的词，继续联想...`;
     }
   }
 
   function updateHistory(history, isFinal = false) {
-    const container = isFinal ? document.getElementById('final-history') : document.getElementById('history-list');
-    container.innerHTML = history.map(h => `
+  const container = isFinal ? document.getElementById('final-history') : document.getElementById('history-list');
+  container.innerHTML = history.map(h => {
+    const myWord = h.words[0];
+    const theirWord = h.words[1];
+    return `
       <div class="history-item">
-        <span class="round">ROUND ${h.round} 第${h.round}轮</span><br>
-        ${h.words.map(w => `${w.nickname}: ${w.word}`).join(' | ')}
+        <span class="round">ROUND ${h.round} 第${h.round}轮</span>
+        <div class="history-words">
+          <div class="history-word mine">${myWord?.nickname || '我'}: ${myWord?.word || '?'}</div>
+          <div class="history-word theirs">${theirWord?.nickname || '对方'}: ${theirWord?.word || '?'}</div>
+        </div>
       </div>
-    `).join('');
-  }
+    `;
+  }).join('');
+}
 
   function startTimer(seconds) {
     clearInterval(timerInterval);
@@ -529,6 +767,27 @@ function startPolling() {
     document.getElementById('join-code').value = urlParams.get('room');
     document.getElementById('nickname').focus();
   }
+
+  // 生成随机泡泡
+function createBubbles() {
+  const count = 15;
+  for (let i = 0; i < count; i++) {
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    
+    const size = Math.random() * 50 + 10;
+    bubble.style.width = size + 'px';
+    bubble.style.height = size + 'px';
+    bubble.style.left = Math.random() * 100 + '%';
+    bubble.style.animationDuration = (Math.random() * 12 + 8) + 's';
+    bubble.style.animationDelay = (Math.random() * 15) + 's';
+    
+    document.body.appendChild(bubble);
+  }
+}
+createBubbles();
+
+
 </script>
  
 </body>
