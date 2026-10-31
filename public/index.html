@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=ZCOOL+QingKe+HuangYou&display=swap" rel="stylesheet">
+  <title>哪怕离你很远两颗心也可以贴近 | SAME WORD</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+  font-family: 'ZCOOL QingKe HuangYou', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(135deg, #52c234 0%, #061700 100%);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* 电脑端：用照片背景 */
+@media (min-width: 768px) {
+  body {
+    background: url('/bg.jpg') no-repeat center center fixed;
+    background-size: cover;
+  }
+  /* 加一层深色遮罩，让白色卡片更清楚 */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: -1;
+  }
+}
+
+    .container {
+  background: white;
+  border-radius: 24px;
+  padding: 32px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+/* 电脑端：透明悬浮毛玻璃 */
+@media (min-width: 768px) {
+  .container {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+}
+    .logo {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .logo h1 {
+      font-family: 'Press Start 2P', 'ZCOOL QingKe HuangYou', monospace;
+      font-size: 40px;
+      background: linear-gradient(135deg, #52c234, #061700 );
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+      letter-spacing: 2px;
+    }
+
+    .logo p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 18px;
+      margin-bottom: 12px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 22px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #5a3f37,#2c7744);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+      margin-top: 8px;
+    }
+
+    .room-code {
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      letter-spacing: 4px;
+      color: #948e99;
+      margin: 16px 0;
+      padding: 16px;
+      background: #f8f9ff;
+      border-radius: 12px;
+      border: 2px dashed #2e1437;
+      font-family: 'Press Start 2P', monospace;
+    }
+
+    .timer {
+      text-align: center;
+      font-size: 48px;
+      font-weight: bold;
+      color: #667eea;
+      margin: 16px 0;
+      font-family: 'Press Start 2P', monospace;
+    }
+
+    .timer.warning { color: #ff6b6b; }
+
+    .round-info {
+      text-align: center;
+      color: #666;
+      margin-bottom: 16px;
+    }
+
+    .word-display {
+      display: flex;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .word-box {
+      flex: 1;
+      padding: 24px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .word-box.mine {
+      background: #f0f4ff;
+      color: #667eea;
+    }
+
+    .word-box.theirs {
+      background: #fff0f4;
+      color: #e91e63;
+    }
+
+    .word-box.pending {
+      background: #f5f5f5;
+      color: #999;
+    }
+
+    .history {
+      margin-top: 24px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .history-item .round {
+      color: #667eea;
+      font-weight: bold;
+    }
+
+    .status-message {
+      text-align: center;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 12px 0;
+      font-size: 14px;
+    }
+
+    .status-message.success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-message.waiting {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .hidden { display: none; }
+
+    .flex { display: flex; gap: 8px; }
+    .flex > * { flex: 1; }
+
+    @media (max-width: 480px) {
+      .container { padding: 24px; }
+      .logo h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h1>SAME WORD</h1>
+      <p>两颗心贴近吧 · 哪怕离你很远</p >
+    </div>
+
+    <!-- 首页：创建或加入 -->
+    <div id="section-home" class="section active">
+      <input type="text" id="nickname" placeholder="YOUR NAME 你的昵称" maxlength="10">
+      
+      <div style="margin: 16px 0;">
+        <label style="color: #666; font-size: 14px;">THINK TIME 思考时间</label>
+        <div class="flex" style="margin-top: 8px;">
+          <button class="btn-secondary" onclick="setTime(30)">30s</button>
+          <button class="btn-secondary" onclick="setTime(60)" style="background: #667eea; color: white;">60s</button>
+          <button class="btn-secondary" onclick="setTime(90)">90s</button>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="createRoom()">CREATE ROOM 创建房间</button>
+      
+      <div style="text-align: center; margin: 16px 0; color: #999;">OR 或</div>
+      
+      <input type="text" id="join-code" placeholder="ENTER CODE 输入房间码" maxlength="6" style="text-transform: uppercase;">
+      <button class="btn-primary" onclick="joinRoom()">JOIN 加入房间</button>
+    </div>
+
+    <!-- 等待页面 -->
+    <div id="section-waiting" class="section">
+      <div class="status-message waiting">WAITING FOR FRIEND... 等待好友加入...</div>
+      <div class="room-code" id="display-code"></div>
+      <p style="text-align: center; color: #666; font-size: 14px;">
+        SHARE THIS CODE 把房间码发给好友<br>
+        <span id="share-link" style="color: #667eea; word-break: break-all;"></span>
+      </p >
+      <button class="btn-secondary" onclick="copyLink()">COPY LINK 复制链接</button>
+    </div>
+
+    <!-- 游戏页面 -->
+    <div id="section-game" class="section">
+      <div class="round-info" id="round-display">ROUND 1 第1轮</div>
+      <div class="timer" id="timer">60</div>
+      
+      <div class="status-message waiting" id="status-msg">WAITING BOTH... 等待双方提交...</div>
+
+      <div class="word-display">
+        <div class="word-box mine" id="my-word-box">
+          <div style="font-size: 12px; color: #999; margin-bottom: 4px;">YOU 你</div>
+          <div id="my-word">?</div>
+        </div>
+        <div class="word-box theirs pending" id="their-word-box">
+          <div style="font-size: 12px; color: #999; margin-bottom: 4px;">THEM 对方</div>
+          <div id="their-word">?</div>
+        </div>
+      </div>
+
+      <input type="text" id="word-input" placeholder="ENTER YOUR WORD... 输入你的词..." maxlength="20" onkeypress="if(event.key==='Enter') submitWord()">
+      <button class="btn-primary" id="submit-btn" onclick="submitWord()">SUBMIT 提交</button>
+
+      <div class="history" id="history-list"></div>
+    </div>
+
+    <!-- 结果页面 -->
+    <div id="section-result" class="section">
+      <div class="status-message success" style="font-size: 18px; padding: 24px;">
+        🎉 MATCH! 恭喜！你们在第 <span id="final-round"></span> 轮同词成功！
+      </div>
+      
+      <div class="history" id="final-history"></div>
+      
+      <button class="btn-primary" onclick="location.reload()">PLAY AGAIN 再来一局</button>
+      <button class="btn-secondary" onclick="shareResult()">SHARE 分享结果</button>
+    </div>
+  </div>
+
+  <script>
+    let ws;
+    let roomCode;
+    let playerId;
+    let currentRound = 1;
+    let thinkTime = 60;
+    let timerInterval;
+    let mySubmitted = false;
+
+    function setTime(t) {
+      thinkTime = t;
+      document.querySelectorAll('.flex button').forEach((btn, i) => {
+        btn.style.background = [30, 60, 90][i] === t ? '#667eea' : '#f0f0f0';
+        btn.style.color = [30, 60, 90][i] === t ? 'white' : '#333';
+      });
+    }
+
+    function connect() {
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${location.host}`);
+      
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        handleMessage(msg);
+      };
+
+      ws.onclose = () => {
+        alert('连接断开，请刷新页面');
+      };
+    }
+
+    function handleMessage(msg) {
+      switch (msg.type) {
+        case 'room_created':
+          roomCode = msg.roomCode;
+          playerId = msg.playerId;
+          showSection('waiting');
+          document.getElementById('display-code').textContent = roomCode;
+          document.getElementById('share-link').textContent = location.origin + '?room=' + roomCode;
+          break;
+
+        case 'joined_room':
+          roomCode = msg.roomCode;
+          playerId = msg.playerId;
+          showSection('game');
+          break;
+
+        case 'player_joined':
+          showSection('game');
+          break;
+
+        case 'new_round':
+          currentRound = msg.round;
+          mySubmitted = false;
+          updateUI(msg);
+          startTimer(msg.thinkTime);
+          break;
+
+        case 'opponent_submitted':
+          if (!mySubmitted) {
+            document.getElementById('status-msg').textContent = 'THEY SUBMITTED! 对方已提交，等待你...';
+          }
+          break;
+
+        case 'round_result':
+          displayResult(msg);
+          break;
+
+        case 'time_up':
+          alert('TIME UP! 时间到！进入下一轮');
+          break;
+
+        case 'error':
+          alert(msg.message);
+          break;
+      }
+    }
+
+    function createRoom() {
+      const nickname = document.getElementById('nickname').value.trim() || '玩家1';
+      connect();
+      ws.onopen = () => {
+        ws.send(JSON.stringify({
+          type: 'create_room',
+          nickname,
+          thinkTime
+        }));
+      };
+    }
+
+    function joinRoom() {
+      const code = document.getElementById('join-code').value.trim().toUpperCase();
+      const nickname = document.getElementById('nickname').value.trim() || '玩家2';
+      if (!code) return alert('PLEASE ENTER CODE 请输入房间码');
+      
+      connect();
+      ws.onopen = () => {
+        ws.send(JSON.stringify({
+          type: 'join_room',
+          roomCode: code,
+          nickname
+        }));
+      };
+    }
+
+    function submitWord() {
+      const word = document.getElementById('word-input').value.trim();
+      if (!word) return alert('PLEASE ENTER A WORD 请输入一个词');
+      if (mySubmitted) return;
+
+      ws.send(JSON.stringify({
+        type: 'submit_word',
+        word
+      }));
+
+      mySubmitted = true;
+      document.getElementById('my-word').textContent = word;
+      document.getElementById('word-input').disabled = true;
+      document.getElementById('submit-btn').disabled = true;
+      document.getElementById('status-msg').textContent = 'WAITING... 等待对方提交...';
+    }
+
+    function updateUI(msg) {
+      document.getElementById('round-display').textContent = `ROUND ${msg.round} 第${msg.round}轮`;
+      document.getElementById('my-word').textContent = '?';
+      document.getElementById('their-word').textContent = '?';
+      document.getElementById('word-input').value = '';
+      document.getElementById('word-input').disabled = false;
+      document.getElementById('submit-btn').disabled = false;
+      document.getElementById('status-msg').textContent = 'THINK & SUBMIT! 想一个词，同时提交！';
+      document.getElementById('their-word-box').className = 'word-box theirs pending';
+      
+      updateHistory(msg.history);
+    }
+
+    function displayResult(msg) {
+      const myWord = msg.words.find(w => w.playerId === playerId);
+      const theirWord = msg.words.find(w => w.playerId !== playerId);
+
+      document.getElementById('my-word').textContent = myWord?.word || '?';
+      document.getElementById('their-word').textContent = theirWord?.word || '?';
+      document.getElementById('their-word-box').className = 'word-box theirs';
+
+      if (msg.match) {
+        clearInterval(timerInterval);
+        setTimeout(() => {
+          showSection('result');
+          document.getElementById('final-round').textContent = msg.totalRounds;
+          updateHistory(msg.history || [], true);
+        }, 1500);
+      } else {
+        document.getElementById('status-msg').textContent = 'NOT SAME! 不一样！继续联想...';
+        document.getElementById('status-msg').className = 'status-message waiting';
+      }
+    }
+
+    function updateHistory(history, isFinal = false) {
+      const container = isFinal ? document.getElementById('final-history') : document.getElementById('history-list');
+      container.innerHTML = history.map(h => `
+        <div class="history-item">
+          <span class="round">ROUND ${h.round} 第${h.round}轮</span><br>
+          ${h.words.map(w => `${w.nickname}: ${w.word}`).join(' | ')}
+        </div>
+      `).join('');
+    }
+
+    function startTimer(seconds) {
+      clearInterval(timerInterval);
+      let remaining = seconds;
+      const timerEl = document.getElementById('timer');
+      timerEl.textContent = remaining;
+      timerEl.className = 'timer';
+
+      timerInterval = setInterval(() => {
+        remaining--;
+        timerEl.textContent = remaining;
+        if (remaining <= 10) timerEl.className = 'timer warning';
+        if (remaining <= 0) clearInterval(timerInterval);
+      }, 1000);
+    }
+
+    function showSection(name) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById('section-' + name).classList.add('active');
+    }
+
+    function copyLink() {
+      const link = document.getElementById('share-link').textContent;
+      navigator.clipboard.writeText(link).then(() => alert('COPIED! 链接已复制！'));
+    }
+
+    function shareResult() {
+      const text = `我和朋友在 SAME WORD 第${document.getElementById('final-round').textContent}轮同词成功！来挑战我们？`;
+      if (navigator.share) {
+        navigator.share({ title: 'SAME WORD', text, url: location.origin });
+      } else {
+        navigator.clipboard.writeText(text + ' ' + location.origin);
+        alert('COPIED! 已复制分享文案！');
+      }
+    }
+
+    // 自动填充房间码（从链接）
+    const urlParams = new URLSearchParams(location.search);
+    if (urlParams.get('room')) {
+      document.getElementById('join-code').value = urlParams.get('room');
+      document.getElementById('nickname').focus();
+    }
+  </script>
+</body>
+</html>
