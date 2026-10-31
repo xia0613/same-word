@@ -594,6 +594,12 @@ input, button {
     color: #555;
     font-size: 14px;
   }
+  
+  footer div {
+  font-size: 9px !important;
+  color: rgba(0, 0, 0, 0.5) !important;
+  text-shadow: none !important;
+}
 }
 /* 漂浮泡泡 - 纯背景装饰 */
 .bubble {
@@ -971,5 +977,29 @@ createBubbles();
 
 </script>
  
+<footer style="
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  text-align: center;
+  pointer-events: none;
+">
+  <div style="
+    font-family: 'Press Start 2P', 'ZCOOL QingKe HuangYou', monospace;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  ">
+    <span style="color: #d97757;">♥</span>
+    <span>CREATED BY CEREZA</span>
+    <span style="color: #d97757;">♥</span>
+  </div>
+</footer>
 </body>
 </html>
