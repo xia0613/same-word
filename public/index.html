@@ -594,7 +594,7 @@ input, button {
     color: #555;
     font-size: 14px;
   }
-  
+
   footer div {
   font-size: 9px !important;
   color: rgba(0, 0, 0, 0.5) !important;
@@ -857,48 +857,125 @@ function startPolling() {
   }, 1000);
 }
 
-  function updateUIForNewRound(msg) {
-    document.getElementById('round-display').textContent = `ROUND ${msg.currentRound} 第${msg.currentRound}轮`;
-    document.getElementById('my-word').textContent = '?';
-    document.getElementById('their-word').textContent = '?';
-    document.getElementById('word-input').value = '';
-    document.getElementById('word-input').disabled = false;
-    document.getElementById('submit-btn').disabled = false;
-    // 第一轮
-if (msg.currentRound === 1) {
-  document.getElementById('status-msg').textContent = '✨ 请输入你脑海里的第一个词！';
-} else {
-  document.getElementById('status-msg').textContent = `🔄 第${msg.currentRound}轮：请联想你们之前写过的词，输入新词汇！`;
-}
-    document.getElementById('their-word-box').className = 'word-box theirs pending';
-    updateHistory(msg.history);
-    startTimer(msg.thinkTime);
+ function updateUIForNewRound(msg) {
+  document.getElementById('round-display').textContent = `ROUND ${msg.currentRound} 第${msg.currentRound}轮`;
+  document.getElementById('my-word').textContent = '?';
+  document.getElementById('their-word').textContent = '?';
+  document.getElementById('word-input').value = '';
+  document.getElementById('word-input').disabled = false;
+  document.getElementById('submit-btn').disabled = false;
+  
+  // 上一轮提示悬浮顶部
+  if (msg.currentRound > 1 && msg.history && msg.history.length > 0) {
+    const lastRound = msg.history[msg.history.length - 1];
+    const hint = document.createElement('div');
+    hint.id = 'round-hint';
+    hint.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(217, 119, 87, 0.95);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 16px;
+      font-weight: bold;
+      z-index: 50;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      animation: hint-bounce 0.5s ease;
+    `;
+    hint.innerHTML = `🔄 上一轮：「${lastRound.words[0]?.word}」vs「${lastRound.words[1]?.word}」<br>请联想！`;
+    document.body.appendChild(hint);
+    
+    // 3秒后消失
+    setTimeout(() => {
+      hint.style.opacity = '0';
+      hint.style.transition = 'opacity 0.5s';
+      setTimeout(() => hint.remove(), 500);
+    }, 3000);
   }
+  
+  document.getElementById('their-word-box').className = 'word-box theirs pending';
+  updateHistory(msg.history);
+  startTimer(msg.thinkTime);
+}
+
+// 提示动画
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes hint-bounce {
+    0% { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+    50% { transform: translateX(-50%) translateY(5px); }
+    100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+  }
+`;
+document.head.appendChild(style);
 
   function displayResult(msg) {
-    const myWord = msg.words.find(w => w.playerId === playerId);
-    const theirWord = msg.words.find(w => w.playerId !== playerId);
+  const myWord = msg.words.find(w => w.playerId === playerId);
+  const theirWord = msg.words.find(w => w.playerId !== playerId);
 
-    document.getElementById('my-word').textContent = myWord?.word || '?';
-    document.getElementById('their-word').textContent = theirWord?.word || '?';
-    document.getElementById('their-word-box').className = 'word-box theirs';
+  // 先显示词
+  document.getElementById('my-word').textContent = myWord?.word || '?';
+  document.getElementById('their-word').textContent = theirWord?.word || '?';
+  document.getElementById('their-word-box').className = 'word-box theirs';
 
-    if (msg.match) {
-      clearInterval(timerInterval);
-      clearInterval(pollInterval);
+  if (msg.match) {
+    // 同词成功，动画靠近重合
+    clearInterval(timerInterval);
+    
+    const myBox = document.getElementById('my-word-box');
+    const theirBox = document.getElementById('their-word-box');
+    
+    // 添加动画样式
+    myBox.style.transition = 'all 1s ease';
+    theirBox.style.transition = 'all 1s ease';
+    
+    // 延迟执行动画
+    setTimeout(() => {
+      // 两个框靠近（向中间移动）
+      myBox.style.transform = 'translateX(50%)';
+      theirBox.style.transform = 'translateX(-50%)';
+      
+      // 1秒后完全重合
       setTimeout(() => {
-        showSection('result');
-        document.getElementById('final-round').textContent = msg.totalRounds;
-        updateHistory(msg.history || [], true);
-      }, 1500);
-    } else {
-      document.getElementById('status-msg').textContent = `❌ 不一样！看看你们的词，继续联想...`;
-    }
+        myBox.style.transform = 'translateX(100%)';
+        theirBox.style.transform = 'translateX(-100%)';
+        
+        // 变色庆祝
+        setTimeout(() => {
+          myBox.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+          theirBox.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+          myBox.style.color = 'white';
+          theirBox.style.color = 'white';
+          
+          // 显示成功提示
+          document.getElementById('status-msg').textContent = '🎉 恭喜！你们的脑电波同频啦！';
+          document.getElementById('status-msg').className = 'status-message success';
+          
+          // 3秒后跳转到结果页
+          setTimeout(() => {
+            clearInterval(pollInterval);
+            showSection('result');
+            document.getElementById('final-round').textContent = msg.totalRounds;
+            updateHistory(msg.history || [], true);
+          }, 2000);
+        }, 500);
+      }, 1000);
+    }, 500);
+  } else {
+    // 不一样，显示提示
+    document.getElementById('status-msg').textContent = `❌ 不一样！「${myWord?.word}」vs「${theirWord?.word}」继续联想...`;
+    document.getElementById('status-msg').className = 'status-message waiting';
   }
+}
 
   function updateHistory(history, isFinal = false) {
   const container = isFinal ? document.getElementById('final-history') : document.getElementById('history-list');
-  container.innerHTML = history.map(h => {
+  // 倒序显示，最新的在最上面
+  const reversed = [...history].reverse();
+  container.innerHTML = reversed.map(h => {
     const myWord = h.words[0];
     const theirWord = h.words[1];
     return `
@@ -938,15 +1015,89 @@ if (msg.currentRound === 1) {
     navigator.clipboard.writeText(link).then(() => alert('COPIED! 链接已复制！'));
   }
 
-  function shareResult() {
-    const text = `我和朋友在 SAME WORD 第${document.getElementById('final-round').textContent}轮同词成功！来挑战我们？`;
-    if (navigator.share) {
-      navigator.share({ title: 'SAME WORD', text, url: location.origin });
-    } else {
-      navigator.clipboard.writeText(text + ' ' + location.origin);
-      alert('COPIED! 已复制分享文案！');
-    }
-  }
+  async function shareResult() {
+  // 创建画布
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  
+  // 设置尺寸（长图）
+  canvas.width = 800;
+  canvas.height = 1200;
+  
+  // 背景
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, '#360033');
+  gradient.addColorStop(1, '#0b8793');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // 标题
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 40px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('SAME WORD', canvas.width / 2, 80);
+  
+  // 副标题
+  ctx.font = '20px "ZCOOL QingKe HuangYou", sans-serif';
+  ctx.fillText('两颗心贴近吧 · 哪怕离你很远', canvas.width / 2, 120);
+  
+  // 结果
+  const finalRound = document.getElementById('final-round').textContent;
+  ctx.font = 'bold 30px "ZCOOL QingKe HuangYou", sans-serif';
+  ctx.fillText(`🎉 第 ${finalRound} 轮同词成功！`, canvas.width / 2, 180);
+  
+  // 获取历史记录
+  const historyItems = document.querySelectorAll('#final-history .history-item');
+  let yPos = 250;
+  
+  historyItems.forEach((item, index) => {
+    const round = item.querySelector('.round').textContent;
+    const words = item.querySelectorAll('.history-word');
+    
+    // 轮次标题
+    ctx.font = 'bold 22px "ZCOOL QingKe HuangYou", sans-serif';
+    ctx.fillStyle = '#d97757';
+    ctx.fillText(round, canvas.width / 2, yPos);
+    yPos += 40;
+    
+    // 玩家1（左列）
+    ctx.font = '20px "ZCOOL QingKe HuangYou", sans-serif';
+    ctx.fillStyle = '#667eea';
+    ctx.textAlign = 'left';
+    ctx.fillText(words[0]?.textContent || '', 100, yPos);
+    
+    // 玩家2（右列）
+    ctx.fillStyle = '#e91e63';
+    ctx.textAlign = 'right';
+    ctx.fillText(words[1]?.textContent || '', canvas.width - 100, yPos);
+    
+    // 中间连接线
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(canvas.width / 2 - 50, yPos - 5);
+    ctx.lineTo(canvas.width / 2 + 50, yPos - 5);
+    ctx.stroke();
+    
+    ctx.textAlign = 'center';
+    yPos += 60;
+  });
+  
+  // 底部品牌
+  ctx.font = '16px "Press Start 2P", monospace';
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillText('CREATED BY CEREZA', canvas.width / 2, canvas.height - 50);
+  
+  // 转为图片并下载
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `same-word-result-${Date.now()}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
 
   // 自动填充房间码
   const urlParams = new URLSearchParams(location.search);
